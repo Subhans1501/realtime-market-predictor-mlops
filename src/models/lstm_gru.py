@@ -11,7 +11,6 @@ from tensorflow.keras.layers import LSTM, GRU, Dense
 import warnings
 warnings.filterwarnings('ignore')
 
-# ... (Keep all your functions below this exactly the same!)
 def prepare_data(df, look_back=5):
 
     scaler = MinMaxScaler()

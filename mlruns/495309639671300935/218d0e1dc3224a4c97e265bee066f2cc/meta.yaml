@@ -1,0 +1,15 @@
+artifact_uri: file:///D:/Study/Semester%206/Project%201/realtime-market-predictor-mlops/mlruns/495309639671300935/218d0e1dc3224a4c97e265bee066f2cc/artifacts
+end_time: 1777990952065
+entry_point_name: ''
+experiment_id: '495309639671300935'
+lifecycle_stage: active
+run_id: 218d0e1dc3224a4c97e265bee066f2cc
+run_name: RNN_Baseline
+run_uuid: 218d0e1dc3224a4c97e265bee066f2cc
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1777990919222
+status: 3
+tags: []
+user_id: Subhan Shahid
