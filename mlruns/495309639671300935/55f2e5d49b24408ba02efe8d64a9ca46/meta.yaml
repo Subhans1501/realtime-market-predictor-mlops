@@ -1,0 +1,15 @@
+artifact_uri: file:///D:/Study/Semester%206/Project%201/realtime-market-predictor-mlops/mlruns/495309639671300935/55f2e5d49b24408ba02efe8d64a9ca46/artifacts
+end_time: 1777940821392
+entry_point_name: ''
+experiment_id: '495309639671300935'
+lifecycle_stage: active
+run_id: 55f2e5d49b24408ba02efe8d64a9ca46
+run_name: LSTM_Architecture
+run_uuid: 55f2e5d49b24408ba02efe8d64a9ca46
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1777940804130
+status: 3
+tags: []
+user_id: Subhan Shahid
