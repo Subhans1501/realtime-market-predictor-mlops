@@ -8,7 +8,7 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 from tf_keras.models import load_model
 app = FastAPI(title="Market Movement API")
 print("Loading GRU Model...")
-model = load_model("models/gru_model.keras", compile=False)
+model = load_model("models/gru_model.h5", compile=False)
 print("Model loaded successfully!")
 
 class MarketInput(BaseModel):

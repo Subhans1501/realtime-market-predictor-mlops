@@ -61,7 +61,7 @@ def main():
         mlflow.log_metric("f1_score", f1)
         
         os.makedirs("models", exist_ok=True)
-        model.save("models/rnn_baseline.keras")
+        model.save("models/rnn_baseline.h5")
         print(f"Baseline RNN trained. Accuracy: {acc:.4f} | F1: {f1:.4f}")
 
 main()
