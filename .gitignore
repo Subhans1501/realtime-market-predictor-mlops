@@ -181,3 +181,4 @@ cython_debug/
 .cursorignore
 .cursorindexingignoremlops_env/
 mlops_env/
+mlops-key.pem
