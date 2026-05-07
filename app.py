@@ -1,6 +1,5 @@
 import streamlit as st
-import numpy as np
-import os
+import requests
 import time
 
 st.set_page_config(
@@ -32,7 +31,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.markdown("<h1 class='main-header'>AI Market Movement Predictor</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color: gray;'>Powered by Sequential Deep Learning (RNN Baseline)</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: gray;'>Powered by FastAPI Backend & GRU Model</p>", unsafe_allow_html=True)
 st.divider()
 
 col1, col2 = st.columns(2)
@@ -42,9 +41,8 @@ with col1:
     dummy_close = st.number_input("Recent Close Price ($)", value=150.00, step=0.50, format="%.2f")
     
 with col2:
-    st.subheader(" Sentiment Data")
-
-    sentiment_map = {"Positive (Bullish)": 1, "Neutral": 0, "Negative (Bearish)": -1}
+    st.subheader("Sentiment Data")
+    sentiment_map = {"Positive (Bullish)": 1.0, "Neutral": 0.0, "Negative (Bearish)": -1.0}
     selected_sentiment = st.selectbox("Recent News Sentiment", list(sentiment_map.keys()))
     dummy_sentiment = sentiment_map[selected_sentiment]
 
@@ -55,30 +53,33 @@ with btn_col:
     predict_clicked = st.button("Predict Next Day Direction")
 
 if predict_clicked:
-    if os.path.exists("models/rnn_baseline.keras"):
-
-        with st.spinner('Analyzing time-series data and sentiment vectors...'):
-            time.sleep(1.5)
-
-            if dummy_sentiment == 1:
-                prediction = "Upward Trend 🟢"
-                confidence = np.random.uniform(70.0, 92.0)
-            elif dummy_sentiment == -1:
-                prediction = "Downward Trend 🔴"
-                confidence = np.random.uniform(70.0, 92.0)
-            else:
-                prediction = np.random.choice(["Upward Trend 🟢", "Downward Trend 🔴"])
-                confidence = np.random.uniform(51.0, 65.0)
-
-        st.divider()
-        st.subheader(" Model Inference Results")
-
-        res_col1, res_col2 = st.columns(2)
-        with res_col1:
-            st.metric(label="Predicted Market Direction", value=prediction)
-        with res_col2:
-            st.metric(label="Model Confidence", value=f"{confidence:.2f}%")
+    with st.spinner('Querying FastAPI Inference Engine...'):
+        time.sleep(1)
+        
+        try:
+            api_url = "http://127.0.0.1:8000/predict"
+            payload = {
+                "close_price": dummy_close,
+                "sentiment_score": dummy_sentiment
+            }
             
-        st.success("Inference completed successfully using local weights: `rnn_baseline.keras`")
-    else:
-        st.error("Model not found! Please ensure you have run `python src/models/rnn_baseline.py` to train the baseline first.")
+            response = requests.post(api_url, json=payload)
+            
+            if response.status_code == 200:
+                result = response.json()
+                
+                st.divider()
+                st.subheader("Model Inference Results")
+
+                res_col1, res_col2 = st.columns(2)
+                with res_col1:
+                    st.metric(label="Predicted Market Direction", value=result["prediction"])
+                with res_col2:
+                    st.metric(label="Model Confidence", value=f"{result['confidence']}%")
+                    
+                st.success("Inference completed successfully via REST API!")
+            else:
+                st.error(f"API Error: {response.status_code}. Ensure FastAPI is running.")
+                
+        except requests.exceptions.ConnectionError:
+            st.error("Could not connect to the API. Make sure you run `uvicorn api:app --reload` in another terminal!")
