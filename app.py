@@ -1,86 +1,89 @@
 import streamlit as st
 import requests
-import time
+import yfinance as yf
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 st.set_page_config(
-    page_title="Market Predictor AI", 
+    page_title="Market Predictor MLOps", 
     page_icon="📈", 
     layout="centered"
 )
 
-st.markdown("""
-    <style>
-    .stButton>button {
-        width: 100%;
-        background-color: #1E88E5;
-        color: white;
-        font-weight: bold;
-        border-radius: 8px;
-        padding: 10px;
-        border: none;
-    }
-    .stButton>button:hover {
-        background-color: #1565C0;
-        color: white;
-    }
-    .main-header {
-        text-align: center;
-        font-family: 'Helvetica Neue', sans-serif;
-    }
-    </style>
-""", unsafe_allow_html=True)
+st.title("Real-Time Market Movement Predictor")
+st.write("Predict the next day's stock market movement using a Deep Learning GRU model.")
 
-st.markdown("<h1 class='main-header'>AI Market Movement Predictor</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color: gray;'>Powered by FastAPI Backend & GRU Model</p>", unsafe_allow_html=True)
-st.divider()
+API_URL = "http://127.0.0.1:8000/predict"
 
-col1, col2 = st.columns(2)
+tab1, tab2 = st.tabs(["⚡ Live Auto-Fetch", "✍️ Manual Entry"])
 
-with col1:
-    st.subheader("Market Inputs")
-    dummy_close = st.number_input("Recent Close Price ($)", value=150.00, step=0.50, format="%.2f")
+with tab1:
+    st.header("Live Market Data Auto-Fetch")
+    st.write("Automatically pull the latest Apple (AAPL) price and analyze live news headlines.")
     
-with col2:
-    st.subheader("Sentiment Data")
-    sentiment_map = {"Positive (Bullish)": 1.0, "Neutral": 0.0, "Negative (Bearish)": -1.0}
-    selected_sentiment = st.selectbox("Recent News Sentiment", list(sentiment_map.keys()))
-    dummy_sentiment = sentiment_map[selected_sentiment]
+    if st.button("Fetch Live Data & Predict", type="primary"):
+        with st.spinner("Fetching live data from Wall Street..."):
+            try:
 
-st.write("") 
+                aapl = yf.Ticker("AAPL")
+                live_price = aapl.history(period="1d")['Close'].iloc[-1]
 
-_, btn_col, _ = st.columns([1, 2, 1])
-with btn_col:
-    predict_clicked = st.button("Predict Next Day Direction")
+                news_data = aapl.news
+                headlines = [article['title'] for article in news_data[:5]]
 
-if predict_clicked:
-    with st.spinner('Querying FastAPI Inference Engine...'):
-        time.sleep(1)
-        
-        try:
-
-            api_url = "http://127.0.0.1:8000/predict"
-            payload = {
-                "close_price": dummy_close,
-                "sentiment_score": dummy_sentiment
-            }
-            
-            response = requests.post(api_url, json=payload)
-            
-            if response.status_code == 200:
-                result = response.json()
+                analyzer = SentimentIntensityAnalyzer()
+                scores = [analyzer.polarity_scores(title)['compound'] for title in headlines]
+                avg_score = sum(scores) / len(scores) if scores else 0
                 
-                st.divider()
-                st.subheader("Model Inference Results")
+                if avg_score > 0.05:
+                    sentiment_text = "Positive (Bullish)"
+                elif avg_score < -0.05:
+                    sentiment_text = "Negative (Bearish)"
+                else:
+                    sentiment_text = "Neutral"
 
-                res_col1, res_col2 = st.columns(2)
-                with res_col1:
-                    st.metric(label="Predicted Market Direction", value=result["prediction"])
-                with res_col2:
-                    st.metric(label="Model Confidence", value=f"{result['confidence']}%")
+                st.info(f"**Live AAPL Price:** ${live_price:.2f}")
+                st.write("**Top Headlines Analyzed:**")
+                for title in headlines[:3]:
+                    st.caption(f"- {title}")
+                st.info(f"**Calculated Sentiment:** {sentiment_text} (VADER Score: {avg_score:.2f})")
+
+                payload = {"close_price": float(live_price), "sentiment": sentiment_text}
+                response = requests.post(API_URL, json=payload)
+                
+                if response.status_code == 200:
+                    prediction = response.json()["prediction"]
+                    st.success(f"**AI Model Prediction for Tomorrow:** {prediction}")
+                else:
+                    st.error(f"Backend Error: {response.text}")
                     
-                st.success("Inference completed successfully via REST API!")
-            else:
-                st.error(f"API Error: {response.status_code}. Ensure FastAPI is running.")
+            except Exception as e:
+                st.error(f"An error occurred while fetching data: {e}")
+
+with tab2:
+    st.header("Manual Data Entry")
+    st.write("Test specific historical scenarios (e.g., Apple's Q2 Earnings breakout).")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        manual_price = st.number_input("Recent Close Price ($)", min_value=0.0, value=284.18, step=0.5)
+    with col2:
+        manual_sentiment = st.selectbox(
+            "Recent News Sentiment", 
+            ["Negative (Bearish)", "Neutral", "Positive (Bullish)"], 
+            index=2
+        )
+        
+    if st.button("Predict Next Day Direction"):
+        with st.spinner("Analyzing sequence..."):
+            try:
+                payload = {"close_price": manual_price, "sentiment": manual_sentiment}
+                response = requests.post(API_URL, json=payload)
                 
-        except requests.exceptions.ConnectionError:
-            st.error("Could not connect to the API. Make sure you run `uvicorn api:app --reload` in another terminal!")
+                if response.status_code == 200:
+                    prediction = response.json()["prediction"]
+                    st.success(f"**AI Model Prediction for Tomorrow:** {prediction}")
+                else:
+                    st.error("Error connecting to the GRU Model backend.")
+            except requests.exceptions.ConnectionError:
+                st.error("Could not connect to the backend. Is FastAPI running?")

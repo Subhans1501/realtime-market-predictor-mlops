@@ -3,7 +3,7 @@ from airflow.operators.bash import BashOperator
 from datetime import datetime, timedelta
 
 default_args = {
-    'owner': 'F23-OZZO',
+    'owner': 'F23-6109',
     'depends_on_past': False,
     'start_date': datetime(2026, 5, 5),
     'retries': 1,
