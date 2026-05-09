@@ -23,7 +23,6 @@ with tab1:
     if st.button("Fetch Live Data & Predict", type="primary"):
         with st.spinner("Fetching live data from Wall Street..."):
             try:
-
                 aapl = yf.Ticker("AAPL")
                 live_price = aapl.history(period="1d")['Close'].iloc[-1]
 
